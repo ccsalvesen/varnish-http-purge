@@ -307,6 +307,14 @@ class VarnishPurger {
 		}
 		$varniship = apply_filters( 'vhp_varnish_ip' , $varniship );
 
+		$hosts = array();
+
+		if ( isset( $varniship ) && $varniship != null ) {
+			$hosts = preg_split('|,\s*|', $varniship);
+		} else {
+			$hosts[] = $p['host'];
+		}
+
 		// Determine the path
 		$path = '';
 		if ( isset( $p['path'] ) ) {
@@ -323,31 +331,27 @@ class VarnishPurger {
 		 */
 		$schema = apply_filters( 'varnish_http_purge_schema', 'http://' );
 
-		// If we made varniship, let it sail
-		if ( isset( $varniship ) && $varniship != null ) {
-			$host = $varniship;
-		} else {
-			$host = $p['host'];
+		foreach ($hosts as $host) {
+
+			$purgeme = $schema.$host.$path.$pregex;
+
+			if ( !empty( $p['query'] ) && $p['query'] != 'vhp-regex' ) {
+				$purgeme .= '?' . $p['query'];
+			}
+
+			/**
+			 * Filters the HTTP headers to send with a PURGE request.
+			 *
+			 * @since 4.1
+			 */
+			$headers = apply_filters( 'varnish_http_purge_headers', array( 'host' => $p['host'], 'X-Purge-Method' => $x_purge_method ) );
+
+			// Cleanup CURL functions to be wp_remote_request and thus better
+			// http://wordpress.org/support/topic/incompatability-with-editorial-calendar-plugin
+			$response = wp_remote_request( $purgeme, array( 'method' => 'PURGE', 'headers' => $headers ) );
+
+			do_action( 'after_purge_url', $url, $purgeme, $response, $headers );
 		}
-
-		$purgeme = $schema.$host.$path.$pregex;
-
-		if ( !empty( $p['query'] ) && $p['query'] != 'vhp-regex' ) {
-			$purgeme .= '?' . $p['query'];
-		}
-
-		/**
-		 * Filters the HTTP headers to send with a PURGE request.
-		 *
-		 * @since 4.1
-		 */
-		$headers = apply_filters( 'varnish_http_purge_headers', array( 'host' => $p['host'], 'X-Purge-Method' => $x_purge_method ) );
-		
-		// Cleanup CURL functions to be wp_remote_request and thus better
-		// http://wordpress.org/support/topic/incompatability-with-editorial-calendar-plugin
-		$response = wp_remote_request( $purgeme, array( 'method' => 'PURGE', 'headers' => $headers ) );
-
-		do_action( 'after_purge_url', $url, $purgeme, $response, $headers );
 	}
 
 	/**
