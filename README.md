@@ -1,12 +1,8 @@
 Varnish HTTP Purge
 ==================
 
-This is the development repository for the Varnish HTTP Purge plugin.
+This is a fork of [Ipstenu/varnish-http-purge](https://github.com/Ipstenu/varnish-http-purge) which supports multiple Varnish backend servers, because the original does not.  In wp-config.php:
 
-You should install the plugin from the [WordPress.org Repository](http://wordpress.org/plugins/varnish-http-purge/) however the master branch will mirror that. Development happens on various `REL` branches.
-
-## Helpful Links
-
-* [WP Readme](readme.txt)
-* [Changelog](changelog.txt)
-* [VCLs](https://github.com/Ipstenu/varnish-http-purge/wiki/Sample-VCLs)
+```
+define( 'VHR_VARNISH_IP', 'varnish-0.example.com:6081,varnish-1.example.com:6081');
+```
